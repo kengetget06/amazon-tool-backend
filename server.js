@@ -51,21 +51,47 @@ app.get('/api/amazon-info', async (req, res) => {
         // タイトル取得
         const title = $('#productTitle').text().trim();
 
-        // 画像取得 (複数のセレクタを試す)
+        // 画像取得ロジックの強化
         let imageUrl = '';
 
-        // 1. LandingImage (データ属性に入っていることが多い)
-        const landingImage = $('#landingImage').attr('data-old-hires') || $('#landingImage').attr('src');
-        if (landingImage) imageUrl = landingImage;
+        // Helper to extract first image from dynamic-image JSON
+        const getDynamicImage = (selector) => {
+            const data = $(selector).attr('data-a-dynamic-image');
+            if (data) {
+                try {
+                    const images = JSON.parse(data);
+                    const keys = Object.keys(images);
+                    if (keys.length > 0) return keys[0]; // 最大サイズかどうかは不明だがURLを取得
+                } catch (e) { return null; }
+            }
+            return null;
+        };
 
-        // 2. なければ og:image
+        // 1. LandingImage (Main Product)
+        imageUrl = getDynamicImage('#landingImage') ||
+            $('#landingImage').attr('data-old-hires') ||
+            $('#landingImage').attr('src');
+
+        // 2. Books (ImgBlkFront)
+        if (!imageUrl) {
+            imageUrl = getDynamicImage('#imgBlkFront') ||
+                $('#imgBlkFront').attr('src');
+        }
+
+        // 3. Ebooks
+        if (!imageUrl) {
+            imageUrl = getDynamicImage('#ebooksImgBlkFront') ||
+                $('#ebooksImgBlkFront').attr('src');
+        }
+
+        // 4. Fallback: Open Graph
         if (!imageUrl) {
             imageUrl = $('meta[property="og:image"]').attr('content');
         }
 
-        // 3. まだなければ #imgBlkFront (書籍など)
+        // 5. Fallback: Main Image generic
         if (!imageUrl) {
-            imageUrl = $('#imgBlkFront').attr('src');
+            imageUrl = $('.a-dynamic-image').first().attr('src');
         }
 
         if (!title) {
