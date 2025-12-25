@@ -7,21 +7,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL; // 本番環境のFrontend URL (例: https://your-site.github.io)
 
+// CORS設定: トラブルシューティングのため一旦全許可にします
+app.use(cors());
+
+/* Strict CORS Logic (Disabled for debugging)
 const corsOptions = {
     origin: function (origin, callback) {
-        // CLIENT_URLが未設定(ローカル等) または originが無い(サーバー間通信) 場合は許可
         if (!CLIENT_URL || !origin) {
             callback(null, true);
         } else if (origin === CLIENT_URL || origin.startsWith(CLIENT_URL)) {
-            // 設定されたURLからのアクセスなら許可
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     }
 };
-
 app.use(cors(corsOptions));
+*/
 
 // Health Check Endpoint
 app.get('/', (req, res) => {
